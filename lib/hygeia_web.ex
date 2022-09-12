@@ -17,10 +17,6 @@ defmodule HygeiaWeb do
   and import those modules here.
   """
 
-  import Phoenix.LiveView, only: [assign: 3]
-
-  alias Phoenix.LiveView.Socket
-
   @doc false
   @spec controller :: Macro.t()
   def controller do
@@ -44,6 +40,8 @@ defmodule HygeiaWeb do
         root: "lib/hygeia_web/templates",
         namespace: HygeiaWeb
 
+      use Surface.View, root: "lib/hygeia_web/templates"
+
       # Import convenience functions from controllers
       import Phoenix.Controller,
         only: [get_flash: 1, get_flash: 2, view_module: 1, view_template: 1]
@@ -59,8 +57,6 @@ defmodule HygeiaWeb do
     quote location: :keep do
       use Phoenix.LiveView,
         layout: {HygeiaWeb.LayoutView, "live.html"}
-
-      import HygeiaWeb, only: [context_get: 3, context_get: 2]
 
       on_mount(HygeiaWeb.Init.Sentry)
       on_mount(HygeiaWeb.Init.Auth)
@@ -80,8 +76,6 @@ defmodule HygeiaWeb do
       use Surface.LiveView,
         layout: {HygeiaWeb.LayoutView, "live.html"}
 
-      import HygeiaWeb, only: [context_get: 3, context_get: 2]
-
       on_mount(HygeiaWeb.Init.Sentry)
       on_mount(HygeiaWeb.Init.Auth)
       on_mount(HygeiaWeb.Init.Context)
@@ -98,8 +92,6 @@ defmodule HygeiaWeb do
     quote location: :keep do
       use Surface.LiveView,
         layout: {HygeiaWeb.LayoutView, "live.html"}
-
-      import HygeiaWeb, only: [context_get: 3, context_get: 2]
 
       on_mount(HygeiaWeb.Init.Sentry)
       on_mount(HygeiaWeb.Init.Auth)
@@ -208,30 +200,4 @@ defmodule HygeiaWeb do
   defmacro __using__(which) when is_atom(which) do
     apply(__MODULE__, which, [])
   end
-
-  @spec context_assign(socket :: Socket.t(), key :: atom, value :: term) :: Socket.t()
-  def context_assign(socket, key, value),
-    do:
-      assign(
-        socket,
-        :__context__,
-        socket.assigns
-        |> Map.get(:__context__, %{})
-        |> Map.put({__MODULE__, key}, value)
-      )
-
-  @spec context_get(socket :: Socket.t(), key :: atom, default :: default) :: term | default
-        when default: term
-  def context_get(socket, key, default \\ nil)
-
-  def context_get(%Socket{assigns: %{__context__: context}}, key, default) do
-    context
-    |> Map.fetch({__MODULE__, key})
-    |> case do
-      :error -> default
-      {:ok, value} -> value
-    end
-  end
-
-  def context_get(_socket, _key, default), do: default
 end
